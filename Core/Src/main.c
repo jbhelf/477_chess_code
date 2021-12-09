@@ -177,24 +177,24 @@ static void MX_USART2_UART_Init(void);
 	* Negative indicates black (-=black)
 	* */
 
-//	int boardData[8][8] = {
-//						{-ROOK,-KNIGHT,-BISHOP,-KING,-QUEEN,-BISHOP,-KNIGHT,-ROOK},
-//						{-PAWN,-PAWN,-PAWN,-PAWN,-PAWN,-PAWN,-PAWN,-PAWN},
-//						{0,0,0,0,0,0,0,0},
-//						{0,0,0,0,0,0,0,0},
-//						{0,0,0,0,0,0,0,0},
-//						{0,0,0,0,0,0,0,0},
-//						{PAWN,PAWN,PAWN,PAWN,PAWN,PAWN,PAWN,PAWN},
-//						{ROOK,KNIGHT,BISHOP,QUEEN,KING,BISHOP,KNIGHT,ROOK}};
 	int boardData[8][8] = {
-							{0,0,0,0,0,0,0,0},
-							{0,0,0,0,0,0,0,0},
-							{0,0,0,0,0,0,0,0},
-							{0,0,0,0,0,0,0,0},
-							{0,0,0,0,0,0,0,0},
-							{0,0,0,0,0,0,0,0},
-							{0,0,0,0,0,0,0,0},
-							{0,0,0,0,0,0,0,0}};
+						{-ROOK,-KNIGHT,-BISHOP,-KING,-QUEEN,-BISHOP,-KNIGHT,-ROOK},
+						{-PAWN,-PAWN,-PAWN,-PAWN,-PAWN,-PAWN,-PAWN,-PAWN},
+						{0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0},
+						{0,0,0,0,0,0,0,0},
+						{PAWN,PAWN,PAWN,PAWN,PAWN,PAWN,PAWN,PAWN},
+						{ROOK,KNIGHT,BISHOP,QUEEN,KING,BISHOP,KNIGHT,ROOK}};
+//	int boardData[8][8] = {
+//							{0,0,0,0,0,0,0,0},
+//							{0,0,0,0,0,0,0,0},
+//							{0,0,0,0,0,0,0,0},
+//							{0,0,0,0,0,0,0,0},
+//							{0,0,0,0,0,0,0,0},
+//							{0,0,0,0,0,0,0,0},
+//							{0,0,0,0,0,0,0,0},
+//							{0,0,0,0,0,0,0,0}};
 
 	int onPins[8][3] = {
 					{0,0,0},
@@ -362,60 +362,49 @@ static void MX_USART2_UART_Init(void);
 		    HAL_UART_AbortReceive(&huart2);
 		    HAL_UART_Transmit(&huart2, move_to_send, sizeof(move_to_send), 10);
 
-		    //RECEIVE EVALUATION FROM VIK & DISPLAY (CODE FROM RYAN):
-		    //TBD chars [5]
-		    //TBD
-		    HAL_UART_AbortTransmit(&huart2);
-		    HAL_UART_Receive(&huart2, evaluation, sizeof(evaluation), 10000000);
-
-		    bb_display1("Evaluation:                   ");
-		    bb_display2(evaluation);
-		    //TBD
-		    //TBD
-
 		    //Wait to recieve squares to light up from Vik...
-		    char squares_to_light[28]; //This is a char right???
+		    char squares_to_light[28];
 
 		    //Initially render all LEDs black
 		    all_black_render();
 
-//		    HAL_UART_AbortTransmit(&huart2);
+		    HAL_UART_AbortTransmit(&huart2);
 		    HAL_UART_Receive(&huart2, squares_to_light, sizeof(squares_to_light), 10000000);
 
 		    for(int i = 0;i < 28;i++){
-		    	int square = (int) (squares_to_light[i] - 40);
+		    	int square = ((int)squares_to_light[i]) - 40;
+
 		    	if(square < 0 || square > 63){
 		    		break;
 		    	}else{
-		    		int data_recieved = (int) squares_to_light[i];
-
-		    		//1. As there are 15 LEDs/row, determine which specific LED goes on
-					 int square = (data_recieved*2) - (int)(8/data_recieved); //The first component accounts for 1 'working' LED for every 'hidden' LED.  The second component accounts for the fact that there are 15/row, not 16/row
+		    		 //1. As there are 15 LEDs/row, determine which specific LED goes on
+		    		 if(square > 8)
+		    			 int square_to_light = (square*2) - (int)(8/square); //The first component accounts for 1 'working' LED for every 'hidden' LED.  The second component accounts for the fact that there are 15/row, not 16/row
+		    		 else
+		    			 int square_to_light = (square*2);
 
 					 //2. With how LEDs are wired, odd # rows (starting at 0) are 'backwards'
-					 int row = (int)square/8;
+					 int row = (int)square_to_light/8;
 
 					 if(row % 2){ //If the row is odd...
-						 int first_row_index = 8*row; //Lowest square index in the row
+						 int flip_key[8] = {7, 5, 3, 1, -1, -3, -5, -7};
 
-						 int flip_key[8][1] = {
-								 {7},
-								 {5},
-								 {3},
-								 {1},
-								 {-1},
-								 {-3},
-								 {-5},
-								 {-7}};
-
-						 square += flip_key[square-first_row_index][0];
+						 square_to_light += flip_key[square_to_light % 8];
 					 }
 
 					 render_one_led(square, 50, 50, 0); //Render LED purple
 		    	}
 		    }
 
+		    render_neopixel();
+
 		    //BREAK (stuff below here works as expected)
+
+		    //RECEIVE EVALUATION FROM VIK & DISPLAY (CODE FROM RYAN):
+			HAL_UART_Receive(&huart2, evaluation, sizeof(evaluation), 10000000);
+
+			bb_display1("Evaluation:");
+			bb_display2(evaluation);
 
 		    //If the destination changed, update array representation of board:
 			if(dest_row != -1 && dest_hall != -1){
