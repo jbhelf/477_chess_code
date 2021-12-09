@@ -377,11 +377,14 @@ static void MX_USART2_UART_Init(void);
 		    	if(square < 0 || square > 63){
 		    		break;
 		    	}else{
+		    		 int square_to_light;
 		    		 //1. As there are 15 LEDs/row, determine which specific LED goes on
-		    		 if(square > 7)
-		    			 int square_to_light = (square*2) - (int)(8/square); //The first component accounts for 1 'working' LED for every 'hidden' LED.  The second component accounts for the fact that there are 15/row, not 16/row
-		    		 else
-		    			 int square_to_light = (square*2);
+		    		 if(square > 7){
+		    			 square_to_light = (square*2) - (int)(8/square); //The first component accounts for 1 'working' LED for every 'hidden' LED.  The second component accounts for the fact that there are 15/row, not 16/row
+
+		    		 }else{
+		    			 square_to_light = (square*2);
+		    		 }
 
 					 //2. With how LEDs are wired, odd # rows (starting at 0) are 'backwards'
 					 int row = (int)square/8;
@@ -401,6 +404,7 @@ static void MX_USART2_UART_Init(void);
 		    //BREAK (stuff below here works as expected)
 
 		    //RECEIVE EVALUATION FROM VIK & DISPLAY (CODE FROM RYAN):
+		    char evaluation[5];
 			HAL_UART_Receive(&huart2, evaluation, sizeof(evaluation), 10000000);
 
 			bb_display1("Evaluation:");
@@ -482,34 +486,15 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  readSuperMux();
-//	  int sum = 0;
-//	  for(int j = 0;j < 8;j++){
-//		  //For each row..
-//		  choseSelectLineSuper(j);
-//		  for(int i = 0;i < 8;i++){
-//			  //For each hall effect sensor...
-//			  choseSelectLineMux(i);
-////			  for(int wait = 0;wait < 100;wait++){
-////				  for(int something = 0;something < 100;something++){
-////					  continue;
-////				  }
-////			  }
-////			  HAL_GPIO_ReadPin(GPIOD, SUPER_MUX_DATA);
-//
-//			  if(!(HAL_GPIO_ReadPin(GPIOD, SUPER_MUX_DATA))){
-//				  sum += 1;
-//			  }
-//		  }
-//	  }
-//	  char test[16];
-//	  int num = 3;
+
+
+//	  char test[5];
 //	  //assign to pdata
-//	  sprintf(test, "%d", sum);
 ////			  (int)0, pData, 1);
 ////	  continue;
 //
-////	  HAL_UART_AbortTransmit(&huart2);
-////	  HAL_UART_Receive(&huart2, pData, sizeof(pData), 10000000);
+//	  HAL_UART_AbortTransmit(&huart2);
+//	  HAL_UART_Receive(&huart2, test, sizeof(test), 10000000);
 ////	  HAL_UART_AbortReceive(&huart2);
 ////	  HAL_UART_Transmit(&huart2, pData, sizeof(pData), 10);
 //	  bb_display2(test);
