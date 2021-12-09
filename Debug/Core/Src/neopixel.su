@@ -1,0 +1,12 @@
+neopixel.c:25:17:hsvtorbg	56	static
+neopixel.c:58:6:init_neopixel	16	static
+neopixel.c:74:6:all_black_render	16	static
+neopixel.c:86:6:render_one_led	16	static
+neopixel.c:94:6:one_color_render	24	static
+neopixel.c:106:6:render_rainbow_cycle_mode	32	static
+neopixel.c:128:6:render_falling_mode	32	static
+neopixel.c:143:6:render_raising_mode	32	static
+neopixel.c:158:6:render_neopixel	16	static,ignoring_inline_asm
+neopixel.c:182:6:prepare_next_led	24	static
+neopixel.c:204:6:HAL_TIM_PWM_PulseFinishedCallback	24	static
+neopixel.c:229:6:HAL_TIM_PWM_PulseFinishedHalfCpltCallback	24	static
