@@ -378,18 +378,18 @@ static void MX_USART2_UART_Init(void);
 		    		break;
 		    	}else{
 		    		 //1. As there are 15 LEDs/row, determine which specific LED goes on
-		    		 if(square > 8)
+		    		 if(square > 7)
 		    			 int square_to_light = (square*2) - (int)(8/square); //The first component accounts for 1 'working' LED for every 'hidden' LED.  The second component accounts for the fact that there are 15/row, not 16/row
 		    		 else
 		    			 int square_to_light = (square*2);
 
 					 //2. With how LEDs are wired, odd # rows (starting at 0) are 'backwards'
-					 int row = (int)square_to_light/8;
+					 int row = (int)square/8;
 
 					 if(row % 2){ //If the row is odd...
 						 int flip_key[8] = {7, 5, 3, 1, -1, -3, -5, -7};
 
-						 square_to_light += flip_key[square_to_light % 8];
+						 square_to_light += (2*flip_key[square % 8]);
 					 }
 
 					 render_one_led(square, 50, 50, 0); //Render LED purple
