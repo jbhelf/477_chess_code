@@ -144,7 +144,22 @@ static void MX_USART2_UART_Init(void);
 
 	void bb_display2 (const char* str) {
 		bb_cmd(0xc0);
-		for (int i = 0; i < strlen(str); ++i) if (str[i] != '\0') bb_data(str[i]);
+//		for (int i = 0; i < 6; ++i) if (str[i] != '\0') bb_data(str[i]);
+		int flag = 0;
+		int i = 0;
+		int count = 0;
+
+		while(count < 6){
+			if (str[i] != '\0' && (str[i] == '+'|| flag)){
+				flag = 1;
+				bb_data(str[i]);
+				count++;
+			}
+			i++;
+			if(i == 6){
+				i = 0;
+			}
+		}
 	}
 
 	//For row board select lines:
@@ -177,24 +192,24 @@ static void MX_USART2_UART_Init(void);
 	* Negative indicates black (-=black)
 	* */
 
-	int boardData[8][8] = {
-						{-ROOK,-KNIGHT,-BISHOP,-KING,-QUEEN,-BISHOP,-KNIGHT,-ROOK},
-						{-PAWN,-PAWN,-PAWN,-PAWN,-PAWN,-PAWN,-PAWN,-PAWN},
-						{0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0},
-						{0,0,0,0,0,0,0,0},
-						{PAWN,PAWN,PAWN,PAWN,PAWN,PAWN,PAWN,PAWN},
-						{ROOK,KNIGHT,BISHOP,QUEEN,KING,BISHOP,KNIGHT,ROOK}};
 //	int boardData[8][8] = {
-//							{0,0,0,0,0,0,0,0},
-//							{0,0,0,0,0,0,0,0},
-//							{0,0,0,0,0,0,0,0},
-//							{0,0,0,0,0,0,0,0},
-//							{0,0,0,0,0,0,0,0},
-//							{0,0,0,0,0,0,0,0},
-//							{0,0,0,0,0,0,0,0},
-//							{0,0,0,0,0,0,0,0}};
+//						{-ROOK,-KNIGHT,-BISHOP,-KING,-QUEEN,-BISHOP,-KNIGHT,-ROOK},
+//						{-PAWN,-PAWN,-PAWN,-PAWN,-PAWN,-PAWN,-PAWN,-PAWN},
+//						{0,0,0,0,0,0,0,0},
+//						{0,0,0,0,0,0,0,0},
+//						{0,0,0,0,0,0,0,0},
+//						{0,0,0,0,0,0,0,0},
+//						{PAWN,PAWN,PAWN,PAWN,PAWN,PAWN,PAWN,PAWN},
+//						{ROOK,KNIGHT,BISHOP,QUEEN,KING,BISHOP,KNIGHT,ROOK}};
+	int boardData[8][8] = {
+							{0,0,0,0,0,0,0,0},
+							{0,0,0,0,0,0,0,1},
+							{0,0,0,0,0,0,0,0},
+							{0,0,0,0,0,0,0,0},
+							{0,0,0,0,0,0,0,0},
+							{0,0,0,0,0,0,0,0},
+							{0,0,0,0,0,0,0,0},
+							{0,0,0,0,0,0,0,0}};
 
 	int onPins[8][3] = {
 					{0,0,0},
@@ -298,6 +313,8 @@ static void MX_USART2_UART_Init(void);
 
 		int change_detected = 0; //0 means no, 1 means yes
 
+//		bb_display2("reading hall");
+
 		for(int row=0;row<8;row++){
 			//Iterate through each ROW BOARD (line below selects 1 row at a time)
 			choseSelectLineSuper(row);
@@ -341,35 +358,39 @@ static void MX_USART2_UART_Init(void);
 			char move_to_send[2]; //The array of information to send
 			char test_with_display[3];
 
+			int ready_to_receive = 0;
 
 			if(dest_row != -1){ //Destination changed
 				move_to_send[0] = (char)(((8*dest_row) + dest_hall) + 40);
 				sprintf(test_with_display, "%2d", ((8*dest_row) + dest_hall));
 				move_to_send[1] = test_with_display[2] = 'd';
+				ready_to_receive = 1;
 			}else{ //Source changed
 				move_to_send[0] = (char)(((8*source_row) + source_hall) + 40);
 				sprintf(test_with_display, "%2d", ((8*source_row) + source_hall));
 				move_to_send[1] = test_with_display[2] = 's';
-//				move_to_send[2] = 's';
 			}
 
 
 			//comment this out
 			bb_display1(move_to_send);
-			bb_display2(test_with_display);
+//			bb_display1(test_with_display);
 //			Send to Vik via USB UART code ...
 
 		    HAL_UART_AbortReceive(&huart2);
 		    HAL_UART_Transmit(&huart2, move_to_send, sizeof(move_to_send), 10);
+//		    bb_display2("move transmitted");
 
 		    //Wait to recieve squares to light up from Vik...
-		    char squares_to_light[28];
+		    char squares_to_light[2];
 
 		    //Initially render all LEDs black
 		    all_black_render();
 
 		    HAL_UART_AbortTransmit(&huart2);
 		    HAL_UART_Receive(&huart2, squares_to_light, sizeof(squares_to_light), 10000000);
+//		    bb_display1("received");
+		    bb_display1(squares_to_light);
 
 		    for(int i = 0;i < 28;i++){
 		    	int square = ((int)squares_to_light[i]) - 40;
@@ -400,14 +421,17 @@ static void MX_USART2_UART_Init(void);
 		    }
 
 		    render_neopixel();
-
-		    //BREAK (stuff below here works as expected)
-
-		    //RECEIVE EVALUATION FROM VIK & DISPLAY (CODE FROM RYAN):
-		    char evaluation[5];
+//
+//		    //BREAK (stuff below here works as expected)
+//
+//		    //RECEIVE EVALUATION FROM VIK & DISPLAY (CODE FROM RYAN):
+		    char evaluation[6];
+//		    bb_display2("abort transm");
+		    HAL_UART_AbortTransmit(&huart2);
+//		    bb_display2("waiting 4 eval  ");
 			HAL_UART_Receive(&huart2, evaluation, sizeof(evaluation), 10000000);
 
-			bb_display1("Evaluation:");
+////			bb_display1("Evaluation:");
 			bb_display2(evaluation);
 
 		    //If the destination changed, update array representation of board:
